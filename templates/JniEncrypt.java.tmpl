@@ -1,0 +1,24 @@
+package {{PACKAGE}};
+
+public class {{CLASS_NAME}} {
+
+    static {
+        System.loadLibrary("{{SO_NAME}}");
+    }
+
+    /**
+     * AES加密
+     */
+    public static native String {{METHOD_ENCODE}}(Object context, String str);
+
+    /**
+     * AES解密
+     */
+    public static native String {{METHOD_DECODE}}(Object context, String str);
+
+    /**
+     * 签名校验
+     */
+    public static native int {{METHOD_CHECK}}(Object context);
+
+}

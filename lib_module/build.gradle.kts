@@ -1,0 +1,41 @@
+plugins {
+    id("com.android.library")
+}
+
+android {
+    namespace = "com.aesbuilder.lib"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 21
+        targetSdk = 34
+
+        externalNativeBuild {
+            cmake {
+                cppFlags("-frtti", "-fexceptions")
+            }
+        }
+
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
+
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), file("proguard-rules.pro"))
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("CMakeLists.txt")
+        }
+    }
+
+}
+
+dependencies {
+}

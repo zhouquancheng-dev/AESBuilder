@@ -1,0 +1,13 @@
+{
+    "package_name": "com.example.myapp",
+    "signature_hash": -2043803321,
+    "aes_key": "1234567890abcdef",
+    "interference_char": "N",
+    "so_name": "MyEncrypt",
+    "jni_class_package": "com.example.myapp.utils",
+    "jni_class_name": "MyEncrypt",
+    "method_encode": "my_encode",
+    "method_decode": "my_decode",
+    "method_check": "my_check",
+    "abi_filters": ["armeabi-v7a", "arm64-v8a"]
+}
