@@ -5,7 +5,23 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(gh repo view:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(./gradlew.bat:*)",
+      "WebSearch",
+      "WebFetch(domain:dl.google.com)",
+      "Bash(dir:*)",
+      "Bash(python -c:*)",
+      "Bash(del \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\\\\config.test.json\")",
+      "Bash(D:UsersouserAndroidStudioProjectsAESBuildergradlew.bat clean)",
+      "Bash(cmd /c \"cd /d D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder && gradlew.bat clean\")",
+      "Bash(cmd /c \"cd /d D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder && gradlew.bat clean 2>&1\")",
+      "Bash(del:*)",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" add CLAUDE.md README.md app/build.gradle.kts \"app/src/main/kotlin/com/example/myapp/MainActivity.kt\" app/src/main/res/layout/activity_main.xml build_so.py config.json lib_module/CMakeLists.txt lib_module/build.gradle.kts lib_module/src/main/cpp/JNIEncrypt.c lib_module/src/main/cpp/aes.c lib_module/src/main/cpp/aes.h lib_module/src/main/cpp/base64.c lib_module/src/main/cpp/check_emulator.c lib_module/src/main/cpp/checksignature.c lib_module/src/main/cpp/checksignature.h lib_module/src/main/cpp/md5.c lib_module/src/main/cpp/md5.h lib_module/src/main/java/ templates/CMakeLists.txt.tmpl templates/JNIEncrypt.c.tmpl templates/JniEncrypt.java.tmpl templates/build.gradle.kts.tmpl templates/checksignature.h.tmpl templates/MainActivity.kt.tmpl \"使用说明.md\")",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" commit -m \"$\\(cat <<''EOF''\nAdd optional MD5 sign feature and improve build pipeline\n\nAdd sign\\(MD5\\) as an optional feature controlled by config.json fields\nsign_key and method_sign. When configured, the SO includes a sign\\(\\)\nfunction that appends a key to input and returns its MD5 hex digest.\nWhen omitted, build output is identical to before.\n\nKey changes:\n- New static files: md5.c/md5.h \\(RFC 1321 MD5 implementation\\)\n- Templates updated with conditional sign placeholders\n- build_so.py validates sign fields and generates code conditionally\n- MainActivity.kt.tmpl added for test app generation\n- Layout XML includes hidden sign card, shown when feature is enabled\n- Documentation and usage guide updated\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" status)",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" push)",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" add CLAUDE.md README.md \"使用说明.md\")",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" commit -m \"$\\(cat <<''EOF''\nUpdate docs to cover optional MD5 sign feature\n\nAdd sign_key/method_sign field descriptions, config examples, usage\nsamples, and FAQ entries to CLAUDE.md, README.md, and 使用说明.md.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
