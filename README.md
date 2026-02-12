@@ -7,6 +7,7 @@ AES 加密 SO 库一键构建工具，为 Android 项目快速生成独立的 AE
 ## 功能特性
 
 - AES-128 加密/解密（CBC 模式 + Base64）
+- MD5 签名（可选，输入拼接 sign_key 后取 MD5 摘要）
 - APK 签名校验（防二次打包）
 - 反调试检测
 - 模拟器检测
@@ -36,9 +37,13 @@ AES 加密 SO 库一键构建工具，为 Android 项目快速生成独立的 AE
     "method_encode": "my_encode",
     "method_decode": "my_decode",
     "method_check": "my_check",
+    "sign_key": "&key=your_sign_key_here",
+    "method_sign": "my_sign",
     "abi_filters": ["armeabi-v7a", "arm64-v8a"]
 }
 ```
+
+> `sign_key` 和 `method_sign` 为可选字段，不需要 MD5 签名功能可以删除这两行。
 
 ### 2. 运行构建
 
@@ -78,6 +83,9 @@ val decrypted = MyEncrypt.my_decode(context, encrypted)
 
 // 签名校验（返回 1 表示通过）
 val result = MyEncrypt.my_check(context)
+
+// MD5 签名（需配置 sign_key 和 method_sign）
+val signed = MyEncrypt.my_sign(context, "data_to_sign")
 ```
 
 ## 测试模式
@@ -118,6 +126,8 @@ AESBuilder/
 | `method_encode` | 加密方法名 | 可自定义 |
 | `method_decode` | 解密方法名 | 可自定义 |
 | `method_check` | 签名校验方法名 | 可自定义 |
+| `sign_key` | MD5 签名拼接的密钥 | 可选，不填则不生成 sign 功能 |
+| `method_sign` | MD5 签名方法名 | 可选，与 sign_key 必须同时配置 |
 | `abi_filters` | 目标 CPU 架构 | 支持 armeabi-v7a、arm64-v8a |
 
 > 详细使用说明请参阅 [使用说明.md](使用说明.md)
