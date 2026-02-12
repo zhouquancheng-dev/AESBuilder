@@ -10,10 +10,11 @@
 
 
 //合法的APP包名
-static const char *app_packageName = "com.example.myapp";
+static const char *app_packageName = "cn.chendubichen.qhbtx";
 
 //-625644214 is hash of keystore file.
-static const int app_signature_hash_code = -2043803321;
+static const int app_signature_hash_code = 952162030;
+static const char *app_signkey = "&key=000000000000000000000000000";
 
 /**
  * 校验APP 包名和签名是否合法

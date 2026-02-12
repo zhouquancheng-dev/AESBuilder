@@ -27,7 +27,7 @@ int startsWith(const char *str,const char *pre)
 int contains(const char *str,char *key){
 
     char * re;
-    re=strstr(str,key);//第二个参数必须带*
+    re=strstr(str,key);
     if(re)
         return 1;
     else
@@ -42,10 +42,10 @@ int equals(const char *str,char * key){
 
 JNIEXPORT jint JNICALL  check_is_emulator(JNIEnv *env) {
 
-    if(isdebug()==1)//debug模式不校验
+    if(isdebug()==1)
         return 1;
 
-// 这里是模仿java代码的检查是否为模拟器 必要参数 context
+    jint result = 1;
 
     jclass clazz;
     clazz = (*env)->FindClass(env,"android/os/Build");
@@ -54,32 +54,26 @@ JNIEXPORT jint JNICALL  check_is_emulator(JNIEnv *env) {
     jfieldID fid = (*env)->GetStaticFieldID(env, clazz, "FINGERPRINT", "Ljava/lang/String;");
     jstring fingerprintstr = (*env)->GetStaticObjectField(env, clazz, fid);
     const char* fingerprintchars = (*env)->GetStringUTFChars(env, fingerprintstr, JNI_FALSE);
-    (*env)->ReleaseStringUTFChars(env,fingerprintstr,fingerprintchars);
     //MODEL
     jfieldID mid = (*env)->GetStaticFieldID(env, clazz, "MODEL", "Ljava/lang/String;");
     jstring modelstr = (*env)->GetStaticObjectField(env, clazz, mid);
     const char* modelchars = (*env)->GetStringUTFChars(env, modelstr, JNI_FALSE);
-    (*env)->ReleaseStringUTFChars(env,modelstr,modelchars);
     //MANUFACTURER
     jfieldID manid = (*env)->GetStaticFieldID(env, clazz, "MANUFACTURER", "Ljava/lang/String;");
     jstring manufacturerstr = (*env)->GetStaticObjectField(env, clazz, manid);
     const char* manufacturerchars = (*env)->GetStringUTFChars(env, manufacturerstr, JNI_FALSE);
-    (*env)->ReleaseStringUTFChars(env,manufacturerstr,manufacturerchars);
     //PRODUCT
     jfieldID pid = (*env)->GetStaticFieldID(env, clazz, "PRODUCT", "Ljava/lang/String;");
     jstring productstr = (*env)->GetStaticObjectField(env, clazz, pid);
     const char* productchars = (*env)->GetStringUTFChars(env, productstr, JNI_FALSE);
-    (*env)->ReleaseStringUTFChars(env,productstr,productchars);
     //BRAND
     jfieldID bid = (*env)->GetStaticFieldID(env, clazz, "BRAND", "Ljava/lang/String;");
     jstring brandstr = (*env)->GetStaticObjectField(env, clazz, bid);
     const char* brandchars = (*env)->GetStringUTFChars(env, brandstr, JNI_FALSE);
-    (*env)->ReleaseStringUTFChars(env,brandstr,brandchars);
     //DEVICE
     jfieldID did = (*env)->GetStaticFieldID(env, clazz, "DEVICE", "Ljava/lang/String;");
     jstring devicestr = (*env)->GetStaticObjectField(env, clazz, did);
     const char* devicechars = (*env)->GetStringUTFChars(env, devicestr, JNI_FALSE);
-    (*env)->ReleaseStringUTFChars(env,devicestr,devicechars);
 
 
     LOGI("fingerprintchars: %s",fingerprintchars);
@@ -87,35 +81,47 @@ JNIEXPORT jint JNICALL  check_is_emulator(JNIEnv *env) {
     LOGI("manufacturerchars: %s",manufacturerchars);
     LOGI("productchars: %s",productchars);
     LOGI("brandchars: %s",brandchars);
-    if(contains(fingerprintchars,"Android") ){//是模拟器 不通过
-        return 0;
-    }
-    if(contains(fingerprintchars,"unknown") ){//是模拟器 不通过
-        return 0;
+
+    if(contains(fingerprintchars,"unknown") ){
+        result = 0;
+        goto cleanup;
     }
 
     if(contains(modelchars,"google_sdk")){
-        return 0;
+        result = 0;
+        goto cleanup;
     }
     if(contains(modelchars,"Emulator")){
-        return 0;
+        result = 0;
+        goto cleanup;
     }
     if(contains(modelchars,"Android SDK built for x86")){
-        return 0;
+        result = 0;
+        goto cleanup;
     }
 
     if(contains(manufacturerchars,"Genymotion")){
-        return 0;
+        result = 0;
+        goto cleanup;
     }
 
     if(contains(brandchars,"generic") && startsWith(devicechars,"generic")){
-        return 0;
+        result = 0;
+        goto cleanup;
     }
 
     if(contains(productchars,"google_sdk")){
-        return 0;
+        result = 0;
+        goto cleanup;
     }
 
-    return 1;
-}
+cleanup:
+    (*env)->ReleaseStringUTFChars(env,fingerprintstr,fingerprintchars);
+    (*env)->ReleaseStringUTFChars(env,modelstr,modelchars);
+    (*env)->ReleaseStringUTFChars(env,manufacturerstr,manufacturerchars);
+    (*env)->ReleaseStringUTFChars(env,productstr,productchars);
+    (*env)->ReleaseStringUTFChars(env,brandstr,brandchars);
+    (*env)->ReleaseStringUTFChars(env,devicestr,devicechars);
 
+    return result;
+}

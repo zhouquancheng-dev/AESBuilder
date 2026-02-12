@@ -12,6 +12,12 @@ AESBuilder is a template-driven code generation tool that produces hardened AES-
 # Full pipeline: generate files from templates + build SO + collect output
 python build_so.py
 
+# Test mode: also build test APK (app:assembleDebug)
+python build_so.py --test
+
+# Generate only: render templates without building (used by Gradle preBuild)
+python build_so.py --generate-only
+
 # Build only the native library (after templates are already generated)
 ./gradlew :lib_module:assembleRelease
 
@@ -29,13 +35,13 @@ config.json → build_so.py → templates/*.tmpl → generated source files → 
 
 **4-stage pipeline in `build_so.py`:**
 1. Load & validate `config.json`
-2. Render 5 template files into `lib_module/` and its source directories
-3. Execute `./gradlew :lib_module:assembleRelease`
+2. Render 6 template files into `lib_module/` and `app/` source directories (cleaning old package directories first)
+3. Execute `./gradlew :lib_module:assembleRelease` (with `--test`, also `:app:assembleDebug`)
 4. Copy SO files + Java JNI class to `output/`
 
 ### Module Structure
 
-- **app/** — Test app module (Kotlin). Depends on `:lib_module` directly. Used to verify encryption/decryption and obtain APK signature hash via `SignatureUtil`.
+- **app/** — Test app module (Kotlin, fixed package `com.example.myapp`). Depends on `:lib_module` directly. Used to verify encryption/decryption and obtain APK signature hash via `SignatureUtil`. Its `preBuild` task auto-runs `build_so.py --generate-only` to regenerate sources.
 - **lib_module/** — Android Library with CMake native build. Contains C source for AES, Base64, signature checking, anti-debug, and emulator detection. Some files are static (`aes.c`, `base64.c`, `debugger.c`, `check_emulator.c`), others are generated from templates (`JNIEncrypt.c`, `checksignature.h`, `CMakeLists.txt`, `build.gradle.kts`, JNI Java class).
 - **templates/** — `.tmpl` files with `{{PLACEHOLDER}}` syntax, processed by simple string replacement in `build_so.py:render_template()`.
 
@@ -46,7 +52,8 @@ config.json → build_so.py → templates/*.tmpl → generated source files → 
 - `lib_module/src/main/cpp/checksignature.h` — package name + signature hash constants
 - `lib_module/CMakeLists.txt` — SO library name
 - `lib_module/build.gradle.kts` — ABI filters
-- `lib_module/src/main/java/.../JniEncrypt.java` — Java native method declarations
+- `lib_module/src/main/java/<jni_class_package>/JniEncrypt.java` — Java native method declarations (package from config)
+- `app/src/main/kotlin/com/example/myapp/MainActivity.kt` — Test app activity (import/method names follow config)
 
 **Static (not generated):**
 - `aes.c/h` — AES-128 ECB implementation
@@ -66,10 +73,16 @@ config.json → build_so.py → templates/*.tmpl → generated source files → 
 - Gradle 8.11.2, AGP 8.x, Kotlin 2.2.0
 - compileSdk 35, minSdk 26, targetSdk 35
 
+## Test Mode
+
+`python build_so.py --test` additionally builds `app:assembleDebug` for the test app. To make the test app pass signature verification, set `config.json`'s `package_name` and `signature_hash` to match the test app (package `com.example.myapp`, signature hash from Logcat `AES_DEBUG` tag).
+
 ## Key Conventions
 
 - All customization goes through `config.json` — never edit generated files directly
 - Template placeholders use `{{DOUBLE_BRACE}}` format
 - The `output/` directory is ephemeral (cleared on each build)
+- `build_so.py` cleans `lib_module/src/main/java/` and `app/src/main/kotlin/` before generating, so old package directories are automatically removed
 - Native methods verify APK signature before performing encryption; failed checks return `"UNSIGNATURE"`
 - Signature check returns: 1 (pass), -1 (package mismatch), -2 (signature hash mismatch)
+- `jni_class_package` in config controls the Java JNI class package and the SO's JNI registration path — they must match

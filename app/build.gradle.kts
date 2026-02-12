@@ -48,6 +48,16 @@ android {
     }
 }
 
+// AS 点击 Run 前自动生成源文件
+tasks.register<Exec>("generateSources") {
+    workingDir(rootProject.projectDir)
+    commandLine("python", "build_so.py", "--generate-only")
+}
+
+tasks.named("preBuild") {
+    dependsOn("generateSources")
+}
+
 dependencies {
     implementation(project(":lib_module"))
 

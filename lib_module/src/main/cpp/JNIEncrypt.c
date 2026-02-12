@@ -3,7 +3,9 @@
 #include "checksignature.h"
 #include "check_emulator.h"
 #include <string.h>
+#include <stdio.h>
 #include <sys/ptrace.h>
+#include "md5.h"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 
@@ -14,11 +16,11 @@
 // 获取数组的大小
 # define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 // 指定要注册的类，对应完整的java类名
-#define JNIREG_CLASS "com/example/myapp/utils/MyEncrypt"
+#define JNIREG_CLASS "com/zyhd/library/net/encrypt/ZJEncrypt"
 
 const char *UNSIGNATURE = "UNSIGNATURE";
 
-jstring charToJstring(JNIEnv *envPtr, char *src) {
+jstring charToJstring(JNIEnv *envPtr, const char *src) {
     JNIEnv env = *envPtr;
 
     jsize len = strlen(src);
@@ -33,34 +35,35 @@ jstring charToJstring(JNIEnv *envPtr, char *src) {
 }
 
 //__attribute__((section (".mytext")))
-char *getKey() {
+unsigned char *getKey() {
     int n = 0;
-    char s[25];
+    char s[26];
     s[n++] = 'N';
     s[n++] = 'M';
     s[n++] = 'T';
+    s[n++] = 'l';
+    s[n++] = 'h';
+    s[n++] = 'N';
+    s[n++] = 'j';
+    s[n++] = 'J';
+    s[n++] = 'j';
+    s[n++] = 'O';
+    s[n++] = 'W';
     s[n++] = 'I';
-    s[n++] = 'z';
+    s[n++] = '5';
     s[n++] = 'N';
     s[n++] = 'D';
-    s[n++] = 'U';
-    s[n++] = '2';
-    s[n++] = 'N';
-    s[n++] = 'z';
     s[n++] = 'g';
-    s[n++] = '5';
-    s[n++] = 'M';
-    s[n++] = 'G';
-    s[n++] = 'F';
-    s[n++] = 'i';
-    s[n++] = 'Y';
-    s[n++] = '2';
-    s[n++] = 'R';
-    s[n++] = 'l';
+    s[n++] = '1';
+    s[n++] = 'O';
+    s[n++] = 'D';
+    s[n++] = 'V';
+    s[n++] = 'm';
     s[n++] = 'Z';
     s[n++] = 'g';
     s[n++] = '=';
     s[n++] = '=';
+    s[n] = '\0';
     char *encode_str = s + 1;
     return b64_decode(encode_str, strlen(encode_str));
 
@@ -70,13 +73,13 @@ JNIEXPORT jstring JNICALL encode(JNIEnv *env, jobject instance, jobject context,
 
     //先进行apk被 二次打包的校验
     if (check_signature(env, instance, context) != 1 || check_is_emulator(env) != 1) {
-        char *str = UNSIGNATURE;
+        const char *str = UNSIGNATURE;
         return charToJstring(env,str);
     }
 
     uint8_t *AES_KEY = (uint8_t *) getKey();
     const char *in = (*env)->GetStringUTFChars(env, str_, JNI_FALSE);
-    char *baseResult = AES_128_ECB_PKCS5Padding_Encrypt(in, AES_KEY);
+    char *baseResult = AES_128_CBC_PKCS5Padding_Encrypt(in, AES_KEY);
     (*env)->ReleaseStringUTFChars(env, str_, in);
     jstring  result = (*env)->NewStringUTF(env, baseResult);
     free(baseResult);
@@ -89,13 +92,13 @@ JNIEXPORT jstring JNICALL decode(JNIEnv *env, jobject instance, jobject context,
 
     //先进行apk被 二次打包的校验
     if (check_signature(env, instance, context) != 1|| check_is_emulator(env) != 1) {
-        char *str = UNSIGNATURE;
+        const char *str = UNSIGNATURE;
         return charToJstring(env,str);
     }
 
     uint8_t *AES_KEY = (uint8_t *) getKey();
     const char *str = (*env)->GetStringUTFChars(env, str_, JNI_FALSE);
-    char *desResult = AES_128_ECB_PKCS5Padding_Decrypt(str, AES_KEY);
+    char *desResult = AES_128_CBC_PKCS5Padding_Decrypt(str, AES_KEY);
     (*env)->ReleaseStringUTFChars(env, str_, str);
     jstring result = charToJstring(env,desResult);
     free(desResult);
@@ -113,11 +116,50 @@ check_jni(JNIEnv *env, jobject instance, jobject con) {
 }
 
 
+
+JNIEXPORT jstring JNICALL sign(JNIEnv *env, jobject instance, jobject context, jstring str_) {
+
+    //先进行apk被 二次打包的校验
+    if (check_signature(env, instance, context) != 1 || check_is_emulator(env) != 1) {
+        const char *str = UNSIGNATURE;
+        return charToJstring(env, str);
+    }
+
+    const char *str = (*env)->GetStringUTFChars(env, str_, JNI_FALSE);
+
+    // 拼接 str + app_signkey
+    int str_len = strlen(str);
+    int key_len = strlen(app_signkey);
+    char *combined = (char *)malloc(str_len + key_len + 1);
+    strcpy(combined, str);
+    strcat(combined, app_signkey);
+
+    // 计算 MD5
+    MD5_CTX md5;
+    MD5Init(&md5);
+    MD5Update(&md5, (unsigned char *)combined, strlen(combined));
+    unsigned char digest[16];
+    MD5Final(&md5, digest);
+
+    free(combined);
+    (*env)->ReleaseStringUTFChars(env, str_, str);
+
+    // 转为32位十六进制字符串
+    char hex_result[33];
+    for (int i = 0; i < 16; i++) {
+        sprintf(hex_result + i * 2, "%02x", digest[i]);
+    }
+    hex_result[32] = '\0';
+
+    return (*env)->NewStringUTF(env, hex_result);
+}
+
 // Java和JNI函数的绑定表
 static JNINativeMethod method_table[] = {
-        {"my_check", "(Ljava/lang/Object;)I",                                    (void *) check_jni},
-        {"my_decode",         "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", (void *) decode},
-        {"my_encode",         "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", (void *) encode},
+        {"ZJ_check", "(Ljava/lang/Object;)I",                                    (void *) check_jni},
+        {"ZJ_decode",         "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", (void *) decode},
+        {"ZJ_encode",         "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", (void *) encode},
+        {"ZJ_sign",         "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", (void *) sign},
 };
 
 // 注册native方法到java中

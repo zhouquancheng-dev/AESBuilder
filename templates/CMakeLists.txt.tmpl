@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.22.1)
+project({{SO_NAME}})
 
 add_library( # Sets the name of the library.
             {{SO_NAME}}
@@ -18,7 +19,13 @@ add_library( # Sets the name of the library.
              src/main/cpp/base64.h
              src/main/cpp/aes.c
              src/main/cpp/base64.c
+{{SIGN_CMAKE_SOURCES}}
              )
+
+target_compile_options({{SO_NAME}} PRIVATE
+        -fstack-protector-strong
+        -D_FORTIFY_SOURCE=2
+        )
 
 find_library( # Sets the name of the path variable.
               log-lib

@@ -42,13 +42,11 @@ int findPaddingIndex(uint8_t * out, int len);
 #endif // #if defined(ECB) && ECB
 
 
-/*
- * CBC是向量模式  暂不采用
- 如果需要使用 ，请移步 https://github.com/kokke/tiny-AES128-C
- 
 #if defined(CBC) && CBC
+
+char* AES_128_CBC_PKCS5Padding_Encrypt(const char *in, const uint8_t *key);
+char* AES_128_CBC_PKCS5Padding_Decrypt(const char *in, const uint8_t *key);
 
 #endif // #if defined(CBC) && CBC
 
-*/
 #endif //_AES_H_

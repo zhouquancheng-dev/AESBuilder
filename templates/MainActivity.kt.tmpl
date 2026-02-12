@@ -1,4 +1,4 @@
-package com.example.myapp
+package {{APP_PACKAGE}}
 
 import android.os.Bundle
 import android.util.Log
@@ -11,7 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
-import com.zyhd.library.net.encrypt.ZJEncrypt
+import {{JNI_CLASS_PACKAGE}}.{{JNI_CLASS_NAME}}
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
         // 签名校验
         try {
-            val checkResult = ZJEncrypt.ZJ_check(this)
+            val checkResult = {{JNI_CLASS_NAME}}.{{METHOD_CHECK}}(this)
             tvCheckResult.text = if (checkResult == 1) "通过 (1)" else "未通过 ($checkResult)"
         } catch (e: Exception) {
             tvCheckResult.text = "校验异常: %s".format(e.message)
@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             try {
-                lastEncrypted = ZJEncrypt.ZJ_encode(this, input)
+                lastEncrypted = {{JNI_CLASS_NAME}}.{{METHOD_ENCODE}}(this, input)
                 tvEncryptResult.text = lastEncrypted
             } catch (e: Exception) {
                 tvCheckResult.text = "加密失败: %s".format(e.message)
@@ -68,29 +68,12 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             try {
-                val decrypted = ZJEncrypt.ZJ_decode(this, lastEncrypted)
+                val decrypted = {{JNI_CLASS_NAME}}.{{METHOD_DECODE}}(this, lastEncrypted)
                 tvDecryptResult.text = decrypted
             } catch (e: Exception) {
                 tvCheckResult.text = "解密失败: %s".format(e.message)
             }
         }
-
-        // Sign (MD5签名)
-        findViewById<View>(R.id.card_sign).visibility = View.VISIBLE
-        val tvSignResult = findViewById<TextView>(R.id.tv_sign_result)
-        val btnSign = findViewById<MaterialButton>(R.id.btn_sign)
-        btnSign.setOnClickListener {
-            val input = etInput.text?.toString()?.trim().orEmpty()
-            if (input.isEmpty()) {
-                Toast.makeText(this, "请输入待签名字符串", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            try {
-                val signResult = ZJEncrypt.ZJ_sign(this, input)
-                tvSignResult.text = signResult
-            } catch (e: Exception) {
-                tvSignResult.text = "签名失败: %s".format(e.message)
-            }
-        }
+{{SIGN_BUTTON}}
     }
 }

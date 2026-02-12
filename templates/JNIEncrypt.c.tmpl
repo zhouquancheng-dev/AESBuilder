@@ -3,7 +3,9 @@
 #include "checksignature.h"
 #include "check_emulator.h"
 #include <string.h>
+#include <stdio.h>
 #include <sys/ptrace.h>
+{{SIGN_INCLUDE}}
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 
@@ -18,7 +20,7 @@
 
 const char *UNSIGNATURE = "UNSIGNATURE";
 
-jstring charToJstring(JNIEnv *envPtr, char *src) {
+jstring charToJstring(JNIEnv *envPtr, const char *src) {
     JNIEnv env = *envPtr;
 
     jsize len = strlen(src);
@@ -33,10 +35,11 @@ jstring charToJstring(JNIEnv *envPtr, char *src) {
 }
 
 //__attribute__((section (".mytext")))
-char *getKey() {
+unsigned char *getKey() {
     int n = 0;
     char s[{{KEY_ARRAY_SIZE}}];
 {{KEY_CHAR_LINES}}
+    s[n] = '\0';
     char *encode_str = s + 1;
     return b64_decode(encode_str, strlen(encode_str));
 
@@ -46,13 +49,13 @@ JNIEXPORT jstring JNICALL encode(JNIEnv *env, jobject instance, jobject context,
 
     //先进行apk被 二次打包的校验
     if (check_signature(env, instance, context) != 1 || check_is_emulator(env) != 1) {
-        char *str = UNSIGNATURE;
+        const char *str = UNSIGNATURE;
         return charToJstring(env,str);
     }
 
     uint8_t *AES_KEY = (uint8_t *) getKey();
     const char *in = (*env)->GetStringUTFChars(env, str_, JNI_FALSE);
-    char *baseResult = AES_128_ECB_PKCS5Padding_Encrypt(in, AES_KEY);
+    char *baseResult = AES_128_CBC_PKCS5Padding_Encrypt(in, AES_KEY);
     (*env)->ReleaseStringUTFChars(env, str_, in);
     jstring  result = (*env)->NewStringUTF(env, baseResult);
     free(baseResult);
@@ -65,13 +68,13 @@ JNIEXPORT jstring JNICALL decode(JNIEnv *env, jobject instance, jobject context,
 
     //先进行apk被 二次打包的校验
     if (check_signature(env, instance, context) != 1|| check_is_emulator(env) != 1) {
-        char *str = UNSIGNATURE;
+        const char *str = UNSIGNATURE;
         return charToJstring(env,str);
     }
 
     uint8_t *AES_KEY = (uint8_t *) getKey();
     const char *str = (*env)->GetStringUTFChars(env, str_, JNI_FALSE);
-    char *desResult = AES_128_ECB_PKCS5Padding_Decrypt(str, AES_KEY);
+    char *desResult = AES_128_CBC_PKCS5Padding_Decrypt(str, AES_KEY);
     (*env)->ReleaseStringUTFChars(env, str_, str);
     jstring result = charToJstring(env,desResult);
     free(desResult);
@@ -89,11 +92,14 @@ check_jni(JNIEnv *env, jobject instance, jobject con) {
 }
 
 
+{{SIGN_FUNCTION}}
+
 // Java和JNI函数的绑定表
 static JNINativeMethod method_table[] = {
         {"{{METHOD_CHECK}}", "(Ljava/lang/Object;)I",                                    (void *) check_jni},
         {"{{METHOD_DECODE}}",         "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", (void *) decode},
         {"{{METHOD_ENCODE}}",         "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;", (void *) encode},
+{{SIGN_METHOD_ENTRY}}
 };
 
 // 注册native方法到java中

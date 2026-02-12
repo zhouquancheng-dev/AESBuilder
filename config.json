@@ -1,13 +1,15 @@
 {
-    "package_name": "com.example.myapp",
-    "signature_hash": -2043803321,
-    "aes_key": "1234567890abcdef",
-    "interference_char": "N",
-    "so_name": "MyEncrypt",
-    "jni_class_package": "com.example.myapp.utils",
-    "jni_class_name": "MyEncrypt",
-    "method_encode": "my_encode",
-    "method_decode": "my_decode",
-    "method_check": "my_check",
-    "abi_filters": ["armeabi-v7a", "arm64-v8a"]
+  "package_name": "cn.chendubichen.qhbtx",
+  "signature_hash": 952162030,
+  "aes_key": "19a62c9b948585ff",
+  "interference_char": "N",
+  "so_name": "ZJEncrypt",
+  "jni_class_package": "com.zyhd.library.net.encrypt",
+  "jni_class_name": "ZJEncrypt",
+  "method_encode": "ZJ_encode",
+  "method_decode": "ZJ_decode",
+  "method_check": "ZJ_check",
+  "sign_key": "&key=000000000000000000000000000",
+  "method_sign": "ZJ_sign",
+  "abi_filters": ["armeabi-v7a", "arm64-v8a"]
 }

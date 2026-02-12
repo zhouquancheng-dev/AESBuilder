@@ -4,11 +4,11 @@ plugins {
 
 android {
     namespace = "com.aesbuilder.lib"
-    compileSdk = 34
+    compileSdk = rootProject.extra["compileSdk"].toString().toInt()
 
     defaultConfig {
-        minSdk = 21
-        targetSdk = 34
+        minSdk = rootProject.extra["minSdk"].toString().toInt()
+        targetSdk = rootProject.extra["targetSdk"].toString().toInt()
 
         externalNativeBuild {
             cmake {

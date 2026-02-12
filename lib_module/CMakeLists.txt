@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.22.1)
+project(ZJEncrypt)
 
 add_library( # Sets the name of the library.
-            MyEncrypt
+            ZJEncrypt
 
              # Sets the library as a shared library.
              SHARED
@@ -18,7 +19,14 @@ add_library( # Sets the name of the library.
              src/main/cpp/base64.h
              src/main/cpp/aes.c
              src/main/cpp/base64.c
+             src/main/cpp/md5.h
+             src/main/cpp/md5.c
              )
+
+target_compile_options(ZJEncrypt PRIVATE
+        -fstack-protector-strong
+        -D_FORTIFY_SOURCE=2
+        )
 
 find_library( # Sets the name of the path variable.
               log-lib
@@ -28,7 +36,7 @@ find_library( # Sets the name of the path variable.
               log )
 
 target_link_libraries( # Specifies the target library.
-                       MyEncrypt
+                       ZJEncrypt
 
                        # included in the NDK.
                        ${log-lib} )

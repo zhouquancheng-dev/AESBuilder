@@ -508,7 +508,7 @@ char* AES_128_ECB_PKCS5Padding_Encrypt(const char *in, const uint8_t *key)
 
   int count=paddingInputLengt / 16;
   //开始分段加密
-  char * out=(char*)malloc(paddingInputLengt);
+  uint8_t * out=(uint8_t*)malloc(paddingInputLengt);
   for ( i = 0; i < count; ++i) {
     AES128_ECB_encrypt(paddingInput+i*16, key, out+i*16);
   }
@@ -555,7 +555,7 @@ char * AES_128_ECB_PKCS5Padding_Decrypt(const char *in, const uint8_t* key)
 
     //去除结尾垃圾字符串 begin
     int index = findPaddingIndex(out, inputLength);
-    if(index==NULL)
+    if(index==0)
     {
         return (char*)out;
     }
@@ -588,14 +588,153 @@ int findPaddingIndex(uint8_t * out, int len)
 }
 
 
-/**
- *
- * 这里干掉了CBC 相关代码 ，这块代码是一个AES的一个带有向量的算法
- * 找寻这些代码 请移步 https://github.com/kokke/tiny-AES128-C
+#endif // #if defined(ECB) && ECB
+
 
 #if defined(CBC) && CBC
+
+#include <fcntl.h>
+#include <unistd.h>
+
+static void XorWithBlock(uint8_t *buf, const uint8_t *block)
+{
+    uint8_t i;
+    for (i = 0; i < 16; ++i) {
+        buf[i] ^= block[i];
+    }
+}
+
+static int GenerateRandomIV(uint8_t *iv)
+{
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd < 0) return -1;
+    ssize_t n = read(fd, iv, 16);
+    close(fd);
+    return (n == 16) ? 0 : -1;
+}
+
+/**
+ * AES-128 CBC PKCS5Padding Encrypt
+ * Output format: Base64( IV(16 bytes) || ciphertext )
+ */
+char* AES_128_CBC_PKCS5Padding_Encrypt(const char *in, const uint8_t *key)
+{
+    int inLength = (int) strlen(in);
+    int group = inLength / 16;
+    int size = 16 * (group + 1);
+    int dif = size - inLength;
+    int i;
+
+    // PKCS5 padding
+    uint8_t *paddingInput = (uint8_t*)malloc(size);
+    if (paddingInput == NULL) return NULL;
+
+    for (i = 0; i < size; i++) {
+        if (i < inLength) {
+            paddingInput[i] = in[i];
+        } else {
+            if (inLength % 16 == 0) {
+                paddingInput[i] = 0x10;
+            } else {
+                paddingInput[i] = (uint8_t)dif;
+            }
+        }
+    }
+
+    // Generate random IV
+    uint8_t iv[16];
+    if (GenerateRandomIV(iv) != 0) {
+        free(paddingInput);
+        return NULL;
+    }
+
+    // Allocate output: IV(16) + ciphertext(size)
+    int totalLen = 16 + size;
+    uint8_t *out = (uint8_t*)malloc(totalLen);
+    if (out == NULL) {
+        free(paddingInput);
+        return NULL;
+    }
+
+    // Copy IV to output front
+    memcpy(out, iv, 16);
+
+    // CBC encrypt: chain each block
+    int count = size / 16;
+    uint8_t prevBlock[16];
+    memcpy(prevBlock, iv, 16);
+
+    for (i = 0; i < count; ++i) {
+        uint8_t block[16];
+        memcpy(block, paddingInput + i * 16, 16);
+        XorWithBlock(block, prevBlock);
+        AES128_ECB_encrypt(block, key, out + 16 + i * 16);
+        memcpy(prevBlock, out + 16 + i * 16, 16);
+    }
+
+    char *base64En = b64_encode(out, totalLen);
+    free(paddingInput);
+    free(out);
+    return base64En;
+}
+
+/**
+ * AES-128 CBC PKCS5Padding Decrypt
+ * Input format: Base64( IV(16 bytes) || ciphertext )
+ */
+char* AES_128_CBC_PKCS5Padding_Decrypt(const char *in, const uint8_t *key)
+{
+    size_t inputLength = 0;
+    uint8_t *inputDesBase64 = b64_decode_ex(in, strlen(in), &inputLength);
+    if (inputDesBase64 == NULL || inputLength < 32) {
+        free(inputDesBase64);
+        return NULL;
+    }
+
+    // Extract IV from first 16 bytes
+    uint8_t iv[16];
+    memcpy(iv, inputDesBase64, 16);
+
+    size_t cipherLen = inputLength - 16;
+    uint8_t *cipherData = inputDesBase64 + 16;
+
+    uint8_t *out = (uint8_t*)malloc(cipherLen);
+    if (out == NULL) {
+        free(inputDesBase64);
+        return NULL;
+    }
+    memset(out, 0, cipherLen);
+
+    size_t count = cipherLen / 16;
+    if (count == 0) {
+        free(inputDesBase64);
+        free(out);
+        return NULL;
+    }
+
+    // CBC decrypt: decrypt each block then XOR with previous ciphertext block (or IV)
+    uint8_t prevBlock[16];
+    memcpy(prevBlock, iv, 16);
+    size_t i;
+
+    for (i = 0; i < count; ++i) {
+        AES128_ECB_decrypt(cipherData + i * 16, key, out + i * 16);
+        XorWithBlock(out + i * 16, prevBlock);
+        memcpy(prevBlock, cipherData + i * 16, 16);
+    }
+
+    // Remove PKCS5 padding
+    int index = findPaddingIndex(out, (int)cipherLen);
+    if (index == 0) {
+        free(inputDesBase64);
+        return (char*)out;
+    }
+    if (index < (int)cipherLen) {
+        memset(out + index, '\0', cipherLen - index);
+    }
+
+    free(inputDesBase64);
+    return (char*)out;
+}
+
 #endif // #if defined(CBC) && CBC
-
-*/
-
-#endif // #if defined(ECB) && ECB
