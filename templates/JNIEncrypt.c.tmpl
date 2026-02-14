@@ -55,7 +55,7 @@ JNIEXPORT jstring JNICALL encode(JNIEnv *env, jobject instance, jobject context,
 
     uint8_t *AES_KEY = (uint8_t *) getKey();
     const char *in = (*env)->GetStringUTFChars(env, str_, JNI_FALSE);
-    char *baseResult = AES_128_CBC_PKCS5Padding_Encrypt(in, AES_KEY);
+    char *baseResult = {{ENCRYPT_FUNC}}(in, AES_KEY);
     (*env)->ReleaseStringUTFChars(env, str_, in);
     jstring  result = (*env)->NewStringUTF(env, baseResult);
     free(baseResult);
@@ -74,7 +74,7 @@ JNIEXPORT jstring JNICALL decode(JNIEnv *env, jobject instance, jobject context,
 
     uint8_t *AES_KEY = (uint8_t *) getKey();
     const char *str = (*env)->GetStringUTFChars(env, str_, JNI_FALSE);
-    char *desResult = AES_128_CBC_PKCS5Padding_Decrypt(str, AES_KEY);
+    char *desResult = {{DECRYPT_FUNC}}(str, AES_KEY);
     (*env)->ReleaseStringUTFChars(env, str_, str);
     jstring result = charToJstring(env,desResult);
     free(desResult);

@@ -80,6 +80,14 @@ def load_config(config_path):
         if abi not in valid_abis:
             raise ValueError(f"abi_filters 包含不支持的架构: '{abi}'（支持: {', '.join(sorted(valid_abis))}）")
 
+    # encrypt_mode 校验（可选，默认 ECB）
+    encrypt_mode = config.get("encrypt_mode", "ECB")
+    if isinstance(encrypt_mode, str):
+        encrypt_mode = encrypt_mode.upper()
+    if encrypt_mode not in ("ECB", "CBC"):
+        raise ValueError(f"encrypt_mode 必须是 'ECB' 或 'CBC'，当前: '{config.get('encrypt_mode')}'")
+    config["encrypt_mode"] = encrypt_mode
+
     # sign 功能校验（可选，但 sign_key 和 method_sign 必须同时配置）
     has_sign_key = bool(config.get("sign_key"))
     has_method_sign = bool(config.get("method_sign"))
@@ -239,6 +247,15 @@ def generate_files(config):
     jni_class_path = jni_class_package.replace(".", "/") + "/" + config["jni_class_name"]
     array_size, key_char_lines = generate_key_code(config["aes_key"], config["interference_char"])
 
+    # 根据 encrypt_mode 选择加解密函数名
+    encrypt_mode = config.get("encrypt_mode", "ECB")
+    if encrypt_mode == "CBC":
+        encrypt_func = "AES_128_CBC_PKCS5Padding_Encrypt"
+        decrypt_func = "AES_128_CBC_PKCS5Padding_Decrypt"
+    else:
+        encrypt_func = "AES_128_ECB_PKCS5Padding_Encrypt"
+        decrypt_func = "AES_128_ECB_PKCS5Padding_Decrypt"
+
     jni_content = render_template("JNIEncrypt.c.tmpl", {
         "{{JNI_CLASS_PATH}}": jni_class_path,
         "{{KEY_ARRAY_SIZE}}": str(array_size),
@@ -246,6 +263,8 @@ def generate_files(config):
         "{{METHOD_CHECK}}": config["method_check"],
         "{{METHOD_DECODE}}": config["method_decode"],
         "{{METHOD_ENCODE}}": config["method_encode"],
+        "{{ENCRYPT_FUNC}}": encrypt_func,
+        "{{DECRYPT_FUNC}}": decrypt_func,
         "{{SIGN_INCLUDE}}": sign_repl["{{SIGN_INCLUDE}}"],
         "{{SIGN_FUNCTION}}": sign_repl["{{SIGN_FUNCTION}}"],
         "{{SIGN_METHOD_ENTRY}}": sign_repl["{{SIGN_METHOD_ENTRY}}"],
@@ -428,6 +447,7 @@ def main():
     print(f"  SO名: {config['so_name']}")
     print(f"  JNI类: {config['jni_class_package']}.{config['jni_class_name']}")
     print(f"  ABI: {', '.join(config['abi_filters'])}")
+    print(f"  加密模式: {config['encrypt_mode']}")
     if has_sign(config):
         print(f"  Sign: {config['method_sign']} (已启用)")
 

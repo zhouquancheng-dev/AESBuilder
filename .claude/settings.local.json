@@ -21,7 +21,12 @@
       "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" status)",
       "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" push)",
       "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" add CLAUDE.md README.md \"使用说明.md\")",
-      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" commit -m \"$\\(cat <<''EOF''\nUpdate docs to cover optional MD5 sign feature\n\nAdd sign_key/method_sign field descriptions, config examples, usage\nsamples, and FAQ entries to CLAUDE.md, README.md, and 使用说明.md.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" commit -m \"$\\(cat <<''EOF''\nUpdate docs to cover optional MD5 sign feature\n\nAdd sign_key/method_sign field descriptions, config examples, usage\nsamples, and FAQ entries to CLAUDE.md, README.md, and 使用说明.md.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" diff ceb18a8 HEAD -- lib_module/src/main/cpp/aes.c lib_module/src/main/cpp/aes.h lib_module/src/main/cpp/base64.c lib_module/src/main/cpp/base64.h)",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" show ceb18a8:lib_module/src/main/cpp/aes.c)",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" show ceb18a8:lib_module/src/main/cpp/aes.h)",
+      "Bash(git -C \"D:\\\\Users\\\\ouser\\\\AndroidStudioProjects\\\\AESBuilder\" show ceb18a8:templates/JNIEncrypt.c.tmpl)",
+      "Bash(echo:*)"
     ]
   }
 }

@@ -56,7 +56,7 @@ config.json → build_so.py → templates/*.tmpl → generated source files → 
 - `app/src/main/kotlin/com/example/myapp/MainActivity.kt` — Test app activity (import/method names follow config)
 
 **Static (not generated):**
-- `aes.c/h` — AES-128 ECB implementation
+- `aes.c/h` — AES-128 ECB and CBC implementation
 - `base64.c/h` — Base64 encoding/decoding
 - `md5.c/h` — MD5 hash implementation (used by optional sign feature)
 - `checksignature.c` — Signature verification logic via JNI reflection
@@ -87,6 +87,14 @@ config.json → build_so.py → templates/*.tmpl → generated source files → 
 - Native methods verify APK signature before performing encryption; failed checks return `"UNSIGNATURE"`
 - Signature check returns: 1 (pass), -1 (package mismatch), -2 (signature hash mismatch)
 - `jni_class_package` in config controls the Java JNI class package and the SO's JNI registration path — they must match
+
+### Encrypt Mode (ECB / CBC)
+
+`config.json` supports an optional `encrypt_mode` field (`"ECB"` or `"CBC"`, case-insensitive, defaults to `"ECB"`). This controls which AES function is called in the generated `JNIEncrypt.c`:
+- `"ECB"` → `AES_128_ECB_PKCS5Padding_Encrypt/Decrypt` (default, backward-compatible with old SOs)
+- `"CBC"` → `AES_128_CBC_PKCS5Padding_Encrypt/Decrypt` (random IV prepended to ciphertext)
+
+Both implementations exist in `aes.c`; the mode only affects which function the JNI layer calls. Template placeholders `{{ENCRYPT_FUNC}}` and `{{DECRYPT_FUNC}}` are replaced accordingly.
 
 ### Optional Sign (MD5) Feature
 

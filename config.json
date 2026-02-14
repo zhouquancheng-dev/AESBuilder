@@ -9,7 +9,6 @@
   "method_encode": "ZJ_encode",
   "method_decode": "ZJ_decode",
   "method_check": "ZJ_check",
-  "sign_key": "",
-  "method_sign": "",
+  "encrypt_mode": "ECB",
   "abi_filters": ["armeabi-v7a", "arm64-v8a"]
 }
